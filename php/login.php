@@ -1,7 +1,14 @@
 <?php
 
 	session_start();
-	include("/home/jmonzvse/public_html/mysql/connection.php");
+
+	//if logout is set and there's a session id, destroy session
+	if ($_GET["logout"] == 1 AND $_SESSION['id']) {
+		$message = "You have been logged out. Have an awesome day!";
+		session_destroy();
+	}
+
+	include("dir/to/connection.php");
 
 	//submit btn
 	if ($_POST['submit'] == "Sign Up") {
@@ -34,7 +41,7 @@
 
 		// if errors, prints $error
 		if ($error) {
-			echo "Error(s): ".$error;
+			$error = "Error(s): ".$error;
 		} else {
 
 			/*
@@ -44,23 +51,20 @@
 			*/
 			$query = "SELECT * FROM `users` WHERE `email`='".mysqli_real_escape_string($link, $_POST['email'])."'";
 			$result = mysqli_query($link, $query);
-			echo $results = mysqli_num_rows($result);
+			$results = mysqli_num_rows($result);
 
 			// if email already exists in users db, prompt user
 			if ($results) {
-				echo $_POST['email']." is already registered!";
+				$error=$_POST['email']." is already registered!";
 			} else {
 				// query to insert email and password into users using email and hashed pw 
 				$query = "INSERT INTO `users` (`email`, `password`) VALUES ('".mysqli_real_escape_string($link, $_POST['email'])."', '".md5(md5($_POST['email']).$_POST['password'])."')";
 				mysqli_query($link, $query);
-				echo "You've been signed up!";
 
 				// save session id for user
 				$_SESSION['id'] = mysqli_insert_id($link); 
 
-				print_r($_SESSION);
-
-				// redirect to login system
+				header("Location:mainpage.php");
 			}
 
 		}
@@ -73,14 +77,16 @@
 		$query = "SELECT * FROM `users` WHERE `email`='".mysqli_real_escape_string($link, $_POST['loginEmail'])."' AND `password`='".md5(md5($_POST['loginEmail']).$_POST['loginPassword'])."' LIMIT 1";
 		$result = mysqli_query($link, $query);
 		$row = mysqli_fetch_array($result);
-		print_r($row); // debug purposes
+		//print_r($row); // debug purposes
 
 		if ($row) {
 			$_SESSION['id']=$row['id'];
-			print_r($_SESSION); // debug purposes
+			//print_r($_SESSION); // debug purposes
 			// redirect to login system
+			header("Location:mainpage.php");
+
 		} else {
-			echo "We could not find a user with that name/password combination";
+			$error = "We could not find a user with that name/password combination";
 		}
 	}
 ?>
